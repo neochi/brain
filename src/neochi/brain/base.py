@@ -220,6 +220,10 @@ class SequentialGrayedEyeImageReceiver(SequentialDataReceiver):
             yield received, images
 
 
+class SequentialMovementClassifierProbabilitiesReceiver(SequentialDataReceiver):
+    data_class = dataflow.data.brain.MovementClassProbabilities
+
+
 def fit(model_class, train_data_loader_class, data_dir=None, models_dir=None, model_kwargs={}):
     model = model_class(**model_kwargs)
     if data_dir is None:
@@ -236,12 +240,13 @@ def fit(model_class, train_data_loader_class, data_dir=None, models_dir=None, mo
     return model
 
 
-def predict(model_class, data_receiver_class, data_class, redis_server=None, fps=None, models_dir=None, model_kwargs={}):
+def predict(model_class, data_receiver_class, data_class, redis_server=None, fps=None, models_dir=None,
+            model_kwargs={}, data_receiver_kwargs={}):
     if redis_server is None:
         redis_server = redis.StrictRedis(settings.REDIS_HOST, settings.REDIS_PORT)
     if fps is None:
         fps = float(os.environ.get('NEOCHI_BRAIN_MODEL_%s_FPS' % model_class.name, settings.FPS))
-    data_receiver = data_receiver_class(redis_server, fps)
+    data_receiver = data_receiver_class(redis_server, fps, **data_receiver_kwargs)
     data = data_class(redis_server)
     model = model_class(**model_kwargs)
     if models_dir is None:
