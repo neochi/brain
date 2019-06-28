@@ -65,6 +65,7 @@ def predict_sleep():
     brain_redis_server = get_brain_redis_server()
     sleeping_possibility = dataflow.data.brain.SleepingPossibility(brain_redis_server)
     sleeping_notification = dataflow.notifications.brain.DetectedSleep(brain_redis_server)
+    notified_detected_sleep = False
 
     X_sleep = []
     for updated, X_behavior in image_receiver.receive():
@@ -80,6 +81,9 @@ def predict_sleep():
             y_sleep = sleep_detector.predict_probs(np.array(X_sleep).reshape((-1, sleep_detector.time_steps)))
             sleeping_possibility.value = y_sleep[0]
             print('SLEEP POSSIBILITY:', y_sleep[0])
-            if y_sleep > sleep_detector.threshold:
+            if not notified_detected_sleep and y_sleep > sleep_detector.threshold:
                 print('NOTIFY DETECTED SLEEP')
                 sleeping_notification.notify()
+                notified_detected_sleep = True
+            if y_sleep < sleep_detector.threshold:
+                notified_detected_sleep = False
