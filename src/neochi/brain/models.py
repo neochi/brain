@@ -155,6 +155,10 @@ class SleepDetector(Model):
     def time_steps(self):
         return self._time_steps
 
+    @property
+    def threshold(self):
+        return self._threshold
+
     def fit(self, X, y):
         pass
 
