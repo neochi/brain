@@ -167,7 +167,10 @@ class SleepDetector(Model):
     def save(self, save_dir):
         print('SAVE MODEL %s' % self.__class__.__name__)
         with open(os.path.join(save_dir, 'model.json'), 'w') as f:
-            json.dump({'time_steps': self._time_steps, 'weights': self._weights.tolist(), 'fps': self._fps}, f)
+            json.dump({'time_steps': self._time_steps,
+                       'weights': self._weights.tolist(),
+                       'fps': self._fps,
+                       'threshold': self._threshold}, f)
         print('MODEL %s SAVED' % self.__class__.__name__)
 
     def load(self, save_dir):
