@@ -41,7 +41,7 @@ def fit_behavior_classifier():
 
 def fit_sleep_detector():
     kwargs = environ.get_kwargs('BRAIN_SLEEP_DETECTOR')
-    model = models.SleepDetector(kwargs['time_steps'], kwargs['weights'], kwargs['fps'])
+    model = models.SleepDetector(kwargs['time_steps'], kwargs['weights'], kwargs['fps'], kwargs['threshold'])
     if not os.path.exists(kwargs['save_dir']):
         os.mkdir(kwargs['save_dir'])
     model.save(kwargs['save_dir'])
