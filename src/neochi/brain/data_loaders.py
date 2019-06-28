@@ -25,12 +25,15 @@ __author__ = 'Junya Kaneko <junya@mpsamurai.org>'
 
 
 import os
+import numpy as np
 
 
-REDIS_HOST = os.environ.get('NEOCHI_BRAIN_REDIS_HOST', 'localhost')
-REDIS_PORT = os.environ.get('NEOCHI_BRAIN_REDIS_PORT', '6379')
-
-DATA_DIR = os.environ.get('NEOCHI_BRAIN_DATA_DIR', '/data')
-MODELS_DIR = os.environ.get('NEOCHI_BRAIN_MODELS_DIR', '/models')
-
-FPS = float(os.environ.get('NEOCHI_BRAIN_MODELS_FPS', '0.5'))
+def load_classification_data(data_dir, labels):
+    X, y = [], []
+    for i, label in enumerate(labels):
+        label_data_dir = os.path.join(data_dir, label)
+        for file_name in os.listdir(label_data_dir):
+            if file_name.endswith('.npy'):
+                X.append(np.load(os.path.join(label_data_dir, file_name)))
+                y.append(i)
+    return np.array(X), np.array(y)
