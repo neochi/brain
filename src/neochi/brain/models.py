@@ -54,11 +54,19 @@ class Model:
 
 
 class BehaviorClassifier(Model):
-    def __init__(self, shape, fps, labels, *args, **kwargs):
+    def __init__(self, shape=None, fps=None, labels=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._shape = shape
         self._fps = fps
         self.labels = labels
+
+    @property
+    def shape(self):
+        return self._shape
+
+    @property
+    def shape_with_batch(self):
+        return -1, self._shape[0], self._shape[1], self._shape[2]
 
     @property
     def image_size(self):
@@ -106,11 +114,11 @@ class BehaviorClassifier(Model):
     def score(self, X, y):
         return self._model.evaluate(X, y)
 
-    def predict_prob(self, X):
+    def predict_probs(self, X):
         return self.predict(X)
 
-    def predict_label(self, X):
-        return self.labels[self.predict(X)]
+    def predict_labels(self, X):
+        return [self.labels[i] for i in self.predict(X)]
 
     def save(self, save_dir):
         print('SAVE MODEL %s' % self.__class__.__name__)
@@ -121,17 +129,25 @@ class BehaviorClassifier(Model):
 
     def load(self, save_dir):
         print('LOAD MODEL %s' % self.__class__.__name__)
-        with open(os.path.join(save_dir, 'model.json'), 'w') as f:
-            self._shape, self._fps, self.labels = (json.load(f)[key] for key in ['shape', 'fps', 'labels'])
-        self._model = keras.models.load_model(save_dir, 'model.h5')
+        with open(os.path.join(save_dir, 'model.json'), 'r') as f:
+            params = json.load(f)
+            self._shape, self._fps, self.labels = (params[key] for key in ['shape', 'fps', 'labels'])
+        self._model = keras.models.load_model(os.path.join(save_dir, 'model.h5'))
         print('MODEL %s LOADED' % self.__class__.__name__)
 
 
 class SleepDetector(Model):
-    def __init__(self, time_steps, weights, fps, *args, **kwargs):
+    def __init__(self, time_steps=None, weights=None, fps=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._time_steps = time_steps
-        self._weights = weights if isinstance(weights, np.ndarray) else np.array(weights)
+        if isinstance(weights, np.ndarray):
+            self._weights = weights
+        elif isinstance(weights, list):
+            self._weights = np.array(weights)
+        elif weights is None:
+            self._weights = weights
+        else:
+            raise ValueError('weights must be np.ndarray, list or None')
         self._fps = fps
 
     def fit(self, X, y):
@@ -141,12 +157,16 @@ class SleepDetector(Model):
         return np.average(X, axis=1, weights=self._weights)
 
     def save(self, save_dir):
+        print('SAVE MODEL %s' % self.__class__.__name__)
         with open(os.path.join(save_dir, 'model.json'), 'w') as f:
             json.dump({'time_steps': self._time_steps, 'weights': self._weights.tolist(), 'fps': self._fps}, f)
+        print('MODEL %s SAVED' % self.__class__.__name__)
 
     def load(self, save_dir):
+        print('LOAD MODEL %s' % self.__class__.__name__)
         with open(os.path.join(save_dir, 'model.json'), 'r') as f:
             params = json.load(f)
             self._time_steps = params['time_steps']
             self._weights = np.array(params['weights'])
             self._fps = params['fps']
+        print('MODEL %s LOADED' % self.__class__.__name__)
