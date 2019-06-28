@@ -137,7 +137,7 @@ class BehaviorClassifier(Model):
 
 
 class SleepDetector(Model):
-    def __init__(self, time_steps=None, weights=None, fps=None, *args, **kwargs):
+    def __init__(self, time_steps=None, weights=None, fps=None, threshold=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._time_steps = time_steps
         if isinstance(weights, np.ndarray):
@@ -149,11 +149,19 @@ class SleepDetector(Model):
         else:
             raise ValueError('weights must be np.ndarray, list or None')
         self._fps = fps
+        self._threshold = threshold
+
+    @property
+    def time_steps(self):
+        return self._time_steps
 
     def fit(self, X, y):
         pass
 
     def predict(self, X):
+        return [1 if y > self._threshold else 0 for y in np.average(X, axis=1, weights=self._weights)]
+
+    def predict_probs(self, X):
         return np.average(X, axis=1, weights=self._weights)
 
     def save(self, save_dir):
@@ -169,4 +177,5 @@ class SleepDetector(Model):
             self._time_steps = params['time_steps']
             self._weights = np.array(params['weights'])
             self._fps = params['fps']
+            self._threshold = params['threshold']
         print('MODEL %s LOADED' % self.__class__.__name__)
