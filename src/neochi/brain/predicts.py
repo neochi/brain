@@ -39,12 +39,14 @@ def predict_behavior():
 def predict_sleep():
     def load_behavior_classifier():
         kwargs = environ.get_kwargs('BRAIN_BEHAVIOR_CLASSIFIER')
+        print('BRAIN_BEHAVIOR_CLASSIFIER_SETTINGS:', kwargs)
         behavior_classifier = models.BehaviorClassifier()
         behavior_classifier.load(kwargs['save_dir'])
         return behavior_classifier
 
     def load_sleep_detector():
         kwargs = environ.get_kwargs('BRAIN_SLEEP_DETECTOR')
+        print('BRAIN_SLEEP_DETECTOR_SETTINGS:', kwargs)
         sleep_detector = models.SleepDetector()
         sleep_detector.load(kwargs['save_dir'])
         return sleep_detector
@@ -72,7 +74,7 @@ def predict_sleep():
         if updated:
             X_behavior = X_behavior.reshape(behavior_classifier.shape_with_batch)
             y_behavior = behavior_classifier.predict(X_behavior)
-            X_sleep.append(y_behavior[0])
+            X_sleep.append(1 if y_behavior[0] == 1 else 0)
             print('BEHAVIOR:', behavior_classifier.labels[y_behavior[0]])
             if len(X_sleep) < sleep_detector.time_steps:
                 continue
